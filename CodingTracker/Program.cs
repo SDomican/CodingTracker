@@ -1,18 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using System.Configuration;
-using System.Collections.Specialized;
-using ConsoleTableExt;
-
-var sAttr = ConfigurationManager.AppSettings.Get("Key0");
-
-var codingString = ConfigurationManager.AppSettings.Get("ConnectionString");
-
-Console.WriteLine(sAttr);
-
-Console.WriteLine(codingString);
+using CodingTracker;
 
 
+CodingConfiguration.CreateTable();
 
+CodingConfiguration.GetUserInput();
+
+//var test = new CodingConfiguration();
 
 //var tableData = new List<List<object>>
 //{

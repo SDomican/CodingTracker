@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CodingTracker": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\Stephen Domican\\Source\\Repos\\CodingTracker\\CodingTracker\\"
+    }
+  }
+}
