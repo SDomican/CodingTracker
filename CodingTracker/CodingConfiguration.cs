@@ -27,8 +27,6 @@ namespace CodingTracker
 
                 connection.Close();
             }
-
-
         }
 
         public static void GetUserInput()
@@ -64,13 +62,13 @@ namespace CodingTracker
                         Insert();
                         break;
 
-                    //case "3":
-                    //    Delete();
-                    //    break;
+                    case "3":
+                        Delete();
+                        break;
 
-                    //case "4":
-                    //    Update();
-                    //    break;
+                    case "4":
+                        Update();
+                        break;
 
                     default:
                         Console.WriteLine("\nInvalid Command. Please type a number from 0 to 4.\n");
@@ -80,6 +78,49 @@ namespace CodingTracker
 
 
             }
+        }
+
+        static void Delete()
+        {
+            Console.Clear();
+            GetAllRecords();
+
+            var recordId = GetNumberInput("\n\nPlease type the Id of the record you want to delete or type 0 to go back to Main Menu\n\n");
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                var tableCmd = connection.CreateCommand();
+                tableCmd.CommandText = $"DELETE from CodingSessions WHERE Id = '{recordId}'";
+
+                int rowCount = tableCmd.ExecuteNonQuery();
+
+                if (rowCount == 0)
+                {
+                    Console.WriteLine($"\n\nRecord with Id {recordId} not found");
+                    Delete();
+                }
+
+            }
+
+            Console.WriteLine($"\n\nRecord with Id {recordId} was deleted. \n\n");
+
+            GetUserInput();
+        }
+
+        static int GetNumberInput(string message)
+        {
+            Console.WriteLine(message);
+            string? numberInput = Console.ReadLine();
+
+            if (numberInput == "0") GetUserInput();
+
+            if (!String.IsNullOrEmpty(numberInput))
+            {
+                return Convert.ToInt32(numberInput);
+            }
+
+            else return -1;
         }
 
         private static void Insert()
@@ -104,6 +145,44 @@ namespace CodingTracker
 
                 connection.Close();
             }
+        }
+
+        static void Update()
+        {
+            Console.Clear();
+            GetAllRecords();
+
+            var recordId = GetNumberInput("\n\nPlease type Id of the habit you would like to update. Type 0 to return to main manu.\n\n");
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+
+                connection.Open();
+                var checkCmd = connection.CreateCommand();
+
+                checkCmd.CommandText = $"SELECT EXISTS(SELECT 1 FROM CodingSessions WHERE Id = {recordId})";
+                int checkQuery = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                if (checkQuery == 0)
+                {
+                    Console.WriteLine($"\n\nRecord with Id {recordId} doesn't exist.\n\n");
+                    connection.Close();
+                    Update();
+                }
+
+                TimeOnly startDate = GetTimeInput("Please insert the start time (format HH:MM - e.g. 12:30). Press 0 to return to menu.");
+                TimeOnly endDate = GetTimeInput("\"Please insert the end time (format HH:MM - e.g. 12:30). Press 0 to return to menu.");
+
+                var tableCmd = connection.CreateCommand();
+
+                tableCmd.CommandText = $"UPDATE CodingSessions SET StartTime = '{startDate.ToString()}', EndTime = '{endDate.ToString()}' WHERE Id = '{recordId}'";
+
+                tableCmd.ExecuteNonQuery();
+
+                connection.Close();
+
+            }
+
         }
 
         private static void GetAllRecords()
