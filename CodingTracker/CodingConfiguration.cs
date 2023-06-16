@@ -56,9 +56,9 @@ namespace CodingTracker
                         closeApp = true;
                         break;
 
-                    //case "1":
-                    //    GetAllRecords();
-                    //    break;
+                    case "1":
+                        GetAllRecords();
+                        break;
 
                     case "2":
                         Insert();
@@ -90,26 +90,64 @@ namespace CodingTracker
             TimeOnly startDate = GetTimeInput("Please insert the start time (format HH:MM - e.g. 12:30). Press 0 to return to menu.");
             TimeOnly endDate = GetTimeInput("\"Please insert the end time (format HH:MM - e.g. 12:30). Press 0 to return to menu.");
 
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                var tableCmd = connection.CreateCommand();
 
+                tableCmd.CommandText =
+                           $"INSERT INTO CodingSessions(StartTime, EndTime, Duration) VALUES('{startDate.ToString()}', '{endDate.ToString()}', '{GetTimeDifference(startDate, endDate)}')";
 
-            //string? habit = GetHabitInput();
+                Console.WriteLine($"Executing command: {tableCmd.CommandText.ToString()}");
 
-            //int quantity = GetNumberInput("\n\nPlease insert number of times habit was completed (no decimals allowed)\n\n");
+                tableCmd.ExecuteNonQuery();
 
-            //using (var connection = new SqliteConnection(connectionString))
-            //{
-            //    connection.Open();
-            //    var tableCmd = connection.CreateCommand();
+                connection.Close();
+            }
+        }
 
-            //    tableCmd.CommandText =
-            //               $"INSERT INTO habits(date, quantity) VALUES('{habit}', {quantity})";
+        private static void GetAllRecords()
+        {
+            Console.Clear();
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                var tableCmd = connection.CreateCommand();
+                tableCmd.CommandText =
+                    $"SELECT * FROM CodingSessions";
 
-            //    Console.WriteLine($"Executing command: {tableCmd.CommandText.ToString()}");
+                List<CodingSession> tableData = new();
 
-            //    tableCmd.ExecuteNonQuery();
+                SqliteDataReader reader = tableCmd.ExecuteReader();
 
-            //    connection.Close();
-            //}
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        tableData.Add(
+                        new CodingSession
+                        {
+                            Id = reader.GetInt32(0),
+                            StartDate = reader.GetString(1),
+                            EndDate = reader.GetString(2)
+                        }); ;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No rows found");
+                }
+
+                connection.Close();
+
+                Console.WriteLine("------------------------------------------\n");
+                foreach (var dw in tableData)
+                {
+                    Console.WriteLine($"{dw.Id} - Start Date: {dw.StartDate} - End date: {dw.EndDate}. Duration: {GetTimeDifference(TimeOnly.Parse(dw.StartDate), TimeOnly.Parse(dw.EndDate))}");
+
+                }
+                Console.WriteLine("------------------------------------------\n");
+            }
         }
 
         private static TimeOnly GetTimeInput(string message)
@@ -122,8 +160,18 @@ namespace CodingTracker
 
             TimeOnly time;
 
+            if (!String.IsNullOrEmpty(input) && input.Length > 4)
+            {
+                time = TimeOnly.Parse(input);
+            }
 
-            return TimeOnly.FromDateTime(DateTime.Now);
+
+            return time;
+        }
+
+        private static string GetTimeDifference(TimeOnly start, TimeOnly end)
+        {
+            return (end - start).ToString();
         }
 
     }
